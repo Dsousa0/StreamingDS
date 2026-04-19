@@ -10,7 +10,7 @@ import { useCredentials } from '../contexts/CredentialsContext'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { credentials } = useCredentials()
+  const { selected } = useCredentials()
   const [tab, setTab] = useState('movies')
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState('')
@@ -25,7 +25,6 @@ export default function DashboardPage() {
   const items = isSearching ? searchResults : tab === 'movies' ? movies : series
   const loading = isSearching ? searchLoading : tab === 'movies' ? moviesLoading : seriesLoading
 
-  const activeCredentials = credentials.filter((c) => c.active)
 
   function handleCardClick(item) {
     const mediaType = item.title ? 'movie' : 'tv'
@@ -79,9 +78,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {activeCredentials.length === 0 && (
+      {selected.length === 0 && (
         <div className="mb-4 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 text-sm">
-          Nenhum serviço ativo — exibindo catálogo completo.{' '}
+          Nenhum serviço selecionado — exibindo catálogo completo.{' '}
           <button
             onClick={() => navigate('/settings')}
             className="text-sky-400 hover:underline"

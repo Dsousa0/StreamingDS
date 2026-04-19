@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { PROVIDERS } from '../services/providers'
+import { useCredentials } from '../contexts/CredentialsContext'
 import api from '../services/api'
 
 const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w185'
@@ -10,9 +11,9 @@ export default function PlayerPage() {
   const { tmdbId } = useParams()
   const { state } = useLocation()
   const navigate = useNavigate()
+  const { activeProviderIds } = useCredentials()
   const [watchData, setWatchData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activePlayer, setActivePlayer] = useState(null) // { streamer, url }
 
   const item = state?.item
   const mediaType = state?.mediaType ?? (item?.title ? 'movie' : 'tv')
@@ -20,12 +21,11 @@ export default function PlayerPage() {
   useEffect(() => {
     if (!item) { setLoading(false); return }
     setWatchData(null)
-    setActivePlayer(null)
     setLoading(true)
     api
       .get('/api/stream/watch-link', { params: { id: tmdbId, type: mediaType } })
       .then(({ data }) => setWatchData(data))
-      .catch(() => setWatchData({ link: null, matched: [] }))
+      .catch(() => setWatchData({ link: null, flatrate: [], directLinks: {} }))
       .finally(() => setLoading(false))
   }, [tmdbId, mediaType])
 
@@ -49,8 +49,18 @@ export default function PlayerPage() {
   const year = (item.release_date || item.first_air_date || '').slice(0, 4)
   const rating = item.vote_average ? item.vote_average.toFixed(1) : null
 
-  const matched = watchData?.matched ?? []
   const watchLink = watchData?.link ?? null
+
+  // Filtra pelos streamers selecionados pelo usuário que têm o título disponível
+  const matched = (watchData?.flatrate ?? []).filter((p) =>
+    activeProviderIds.includes(p.providerId)
+  )
+
+  // Mapeia providerId → nome do provider no PROVIDERS
+  const providerByIdMap = Object.entries(PROVIDERS).reduce((acc, [name, cfg]) => {
+    acc[cfg.providerId] = { name, ...cfg }
+    return acc
+  }, {})
 
   return (
     <div className="min-h-full bg-slate-900">
@@ -95,46 +105,31 @@ export default function PlayerPage() {
               {item.overview || 'Sem descrição disponível.'}
             </p>
 
-            {/* Botões dos streamings que têm o título */}
             {loading ? (
               <div className="h-10 w-40 bg-slate-700 animate-pulse rounded-lg" />
             ) : matched.length > 0 ? (
               <div className="flex flex-col gap-2">
-                {matched.map(({ streamer }) => {
-                  const provider = PROVIDERS[streamer]
+                {matched.map(({ providerId }) => {
+                  const provider = providerByIdMap[providerId]
                   if (!provider) return null
-                  const isActive = activePlayer?.streamer === streamer
                   return (
-                    <div key={streamer} className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={() => setActivePlayer(isActive ? null : { streamer, url: provider.url })}
-                        className={`flex items-center gap-2 font-bold px-5 py-2.5 rounded-lg text-sm transition-colors ${
-                          isActive
-                            ? 'bg-slate-600 text-slate-200 hover:bg-slate-500'
-                            : 'bg-sky-500 hover:bg-sky-400 text-white'
-                        }`}
-                      >
-                        {isActive ? '✕ Fechar player' : `▶ Assistir no ${streamer}`}
-                      </button>
-                      <button
-                        onClick={() => window.open(provider.searchUrl(title), '_blank', 'noopener,noreferrer')}
-                        className="text-slate-400 hover:text-slate-200 text-xs underline transition-colors"
-                      >
-                        Abrir no site ↗
-                      </button>
-                    </div>
+                    <button
+                      key={providerId}
+                      onClick={() => {
+                        const direct = watchData?.directLinks?.[provider.name]
+                        const url = direct || watchData?.link || provider.searchUrl(title, mediaType)
+                        window.open(url, '_blank', 'noopener,noreferrer')
+                      }}
+                      className="flex items-center gap-2 font-bold px-5 py-2.5 rounded-lg text-sm transition-colors bg-sky-500 hover:bg-sky-400 text-white"
+                    >
+                      ▶ Assistir no {provider.name}
+                    </button>
                   )
                 })}
-                {watchLink && (
-                  <a href={watchLink} target="_blank" rel="noopener noreferrer"
-                    className="text-slate-600 hover:text-slate-400 text-xs underline transition-colors">
-                    Ver onde mais assistir →
-                  </a>
-                )}
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-slate-500 text-sm">Este título não está disponível nos seus serviços ativos.</p>
+                <p className="text-slate-500 text-sm">Este título não está disponível nos seus serviços.</p>
                 {watchLink && (
                   <a href={watchLink} target="_blank" rel="noopener noreferrer"
                     className="inline-block text-sky-400 hover:text-sky-300 text-sm underline transition-colors">
@@ -145,34 +140,6 @@ export default function PlayerPage() {
             )}
           </div>
         </div>
-
-        {/* Player interno (iframe) */}
-        {activePlayer && (
-          <div className="mt-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-xs">
-                Player interno — {activePlayer.streamer}
-                {' '}
-                <span className="text-slate-600">(alguns sites bloqueiam incorporação)</span>
-              </span>
-              <button
-                onClick={() => setActivePlayer(null)}
-                className="text-slate-600 hover:text-red-400 text-xs transition-colors"
-              >
-                ✕ fechar
-              </button>
-            </div>
-            <iframe
-              key={activePlayer.streamer}
-              src={activePlayer.url}
-              title={activePlayer.streamer}
-              className="w-full rounded-xl border border-slate-700"
-              style={{ height: '65vh' }}
-              allow="fullscreen; autoplay"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-            />
-          </div>
-        )}
       </div>
     </div>
   )

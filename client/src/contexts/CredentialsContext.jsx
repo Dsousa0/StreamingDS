@@ -1,29 +1,30 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import api from '../services/api'
-import { useAuth } from './AuthContext'
+import { createContext, useContext, useState } from 'react'
+import { PROVIDERS } from '../services/providers'
 
 export const CredentialsContext = createContext(null)
 
+function loadSelected() {
+  try { return JSON.parse(localStorage.getItem('selectedStreamers') ?? '[]') }
+  catch { return [] }
+}
+
 export function CredentialsProvider({ children }) {
-  const { isAuthenticated } = useAuth()
-  const [credentials, setCredentials] = useState([])
+  const [selected, setSelected] = useState(loadSelected)
 
-  const refresh = useCallback(async () => {
-    if (!isAuthenticated) return
-    const { data } = await api.get('/api/credentials')
-    setCredentials(data)
-  }, [isAuthenticated])
+  const toggle = (name) => {
+    setSelected((prev) => {
+      const next = prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
+      localStorage.setItem('selectedStreamers', JSON.stringify(next))
+      return next
+    })
+  }
 
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  const activeProviderIds = credentials
-    .filter((c) => c.active && c.providerId)
-    .map((c) => c.providerId)
+  const activeProviderIds = selected
+    .map((name) => PROVIDERS[name]?.providerId)
+    .filter(Boolean)
 
   return (
-    <CredentialsContext.Provider value={{ credentials, activeProviderIds, refresh }}>
+    <CredentialsContext.Provider value={{ selected, toggle, activeProviderIds }}>
       {children}
     </CredentialsContext.Provider>
   )

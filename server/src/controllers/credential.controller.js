@@ -24,17 +24,27 @@ exports.validate = async (req, res) => {
   const credential = await Credential.findById(req.params.id)
   if (!credential) throw new NotFoundError('Credencial')
 
-  const isValid = await validationController.validateCredential(
+  const { valid, cookies } = await validationController.validateCredential(
     credential.streamer,
     credential.email,
     credential.getPassword()
   )
 
-  credential.active = isValid
+  credential.active = valid
   credential.lastValidated = new Date()
+  if (valid && cookies.length) credential.setCookies(cookies)
   await credential.save()
 
   res.json({ active: credential.active, lastValidated: credential.lastValidated })
+}
+
+exports.launch = async (req, res) => {
+  const { streamer, url } = req.query
+  if (!streamer || !url) throw new ValidationError('streamer e url são obrigatórios')
+  const credential = await Credential.findOne({ streamer: new RegExp(`^${streamer}$`, 'i'), active: true })
+  if (!credential) throw new NotFoundError('Credencial ativa')
+  await validationController.launchWithSession(credential, url)
+  res.json({ launched: true })
 }
 
 exports.toggleActive = async (req, res) => {

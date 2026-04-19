@@ -12,7 +12,15 @@ export const PROVIDERS = {
   'HBO Max': {
     url: 'https://play.max.com',
     providerId: 1899,
-    searchUrl: (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
+    searchUrl: (title, mediaType = 'movie') => {
+      const slug = title
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+      const type = mediaType === 'tv' ? 'show' : 'movie'
+      return `https://play.max.com/${type}/${slug}`
+    },
   },
   'Disney+': {
     url: 'https://www.disneyplus.com',

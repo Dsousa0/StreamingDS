@@ -32,6 +32,7 @@ const credentialSchema = new mongoose.Schema(
     providerId: { type: Number, default: null },
     active: { type: Boolean, default: false },
     lastValidated: { type: Date, default: null },
+    cookiesEncrypted: { type: String, default: null },
   },
   { timestamps: true }
 )
@@ -45,6 +46,15 @@ credentialSchema.methods.setPassword = function (plainPassword) {
 
 credentialSchema.methods.getPassword = function () {
   return decrypt(this.passwordEncrypted)
+}
+
+credentialSchema.methods.setCookies = function (cookiesArray) {
+  this.cookiesEncrypted = encrypt(JSON.stringify(cookiesArray))
+}
+
+credentialSchema.methods.getCookies = function () {
+  if (!this.cookiesEncrypted) return []
+  return JSON.parse(decrypt(this.cookiesEncrypted))
 }
 
 credentialSchema.set('toJSON', {

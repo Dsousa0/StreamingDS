@@ -13,6 +13,7 @@ export default function useMovies(page = 1, genre = '') {
     setLoading(true)
     const params = { page }
     if (genre) params.genre = genre
+    if (activeProviderIds.length) params.providers = activeProviderIds.join('|')
     api
       .get('/api/stream/movies', { params })
       .then(({ data }) => {

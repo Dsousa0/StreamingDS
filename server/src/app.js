@@ -54,9 +54,13 @@ const authLimiter = rateLimit({
 })
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    const ip = req.ip || ''
+    return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'
+  },
   message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Limite de requisições atingido.' } },
 })
 
