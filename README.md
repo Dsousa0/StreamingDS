@@ -26,7 +26,7 @@ O Streaming Hub Local resolve o problema de ter múltiplas assinaturas em servi�
 | API externa | TMDB (The Movie Database) |
 | Autenticação | JWT (acesso local) |
 | Criptografia | AES-256-GCM |
-| Testes | Jest + Supertest |
+| Testes | Vitest + @testing-library/react (frontend), Jest + Supertest (backend) |
 
 ---
 
@@ -36,10 +36,20 @@ O Streaming Hub Local resolve o problema de ter múltiplas assinaturas em servi�
 StreamingDS/
 ├── client/                     # Frontend React + Vite + Tailwind
 │   ├── src/
-│   │   ├── components/         # Navbar, Sidebar, MovieCard, PlayerModal
-│   │   ├── hooks/              # useMovies, useAuth
-│   │   ├── pages/              # Login, Dashboard, Settings
-│   │   └── services/           # api.js (TMDB + Backend)
+│   │   ├── __tests__/          # PrivateRoute, LoginPage, useMovies, PlayerPage
+│   │   ├── components/         # PrivateRoute, Layout, Toast, SkeletonCard, MovieCard
+│   │   ├── contexts/           # AuthContext, CredentialsContext
+│   │   ├── hooks/              # useMovies, useSeries, useSearch, useGenres
+│   │   ├── pages/              # LoginPage, DashboardPage, SettingsPage, PlayerPage
+│   │   ├── services/           # api.js (axios + JWT interceptor), providers.js
+│   │   ├── test/               # setup.js (jest-dom)
+│   │   ├── App.jsx             # BrowserRouter + Routes
+│   │   ├── index.css           # @tailwind directives
+│   │   └── main.jsx            # ReactDOM.createRoot
+│   ├── index.html              # Entry point HTML
+│   ├── tailwind.config.js      # Tailwind CSS config
+│   ├── postcss.config.js       # PostCSS config
+│   ├── vitest.config.js        # Vitest + jsdom
 │   ├── vite.config.js          # Vite + proxy /api + Eruda debug plugin
 │   └── package.json
 │
@@ -172,10 +182,10 @@ Acesse: [http://localhost:5173](http://localhost:5173)
 | Fase | Status | Descrição |
 |------|--------|-----------|
 | Fase 1 | ✅ Concluída | Servidor Express + Mongoose + login JWT |
-| Fase 2 | 🔲 Pendente | Frontend: páginas Login, Dashboard, Settings |
-| Fase 3 | 🔲 Pendente | Validação de credenciais via Puppeteer |
-| Fase 4 | 🔲 Pendente | Dashboard TMDB com filtro por watch_providers |
-| Fase 5 | 🔲 Pendente | Player interno com cookies de sessão |
+| Fase 2 | ✅ Concluída | Frontend: páginas Login, Dashboard, Settings |
+| Fase 3 | ✅ Concluída | Validação de credenciais via Puppeteer |
+| Fase 4 | ✅ Concluída | Dashboard TMDB com filtro por watch_providers |
+| Fase 5 | ✅ Concluída | Player interno com cookies de sessão |
 
 ---
 
@@ -203,6 +213,8 @@ O projeto usa o [agnostic-core](https://github.com/paulinett1508-dev/agnostic-co
 | `security/api-hardening` | Helmet, JWT, AES-256-GCM, rate limiting |
 | `database/schema-design` | `models/Credential.js` — índices, criptografia, toJSON |
 | `devops/eruda-mobile-debug` | `client/vite.config.js` — plugin Eruda |
+| `frontend/tailwind-patterns` | `client/src/` — classes Tailwind v3 |
+| `frontend/ux-guidelines` | Dashboard, Settings, LoginPage |
 
 ### Skills disponíveis para próximas fases
 
@@ -247,6 +259,7 @@ Para saber qual agent ou skill usar para cada tarefa, consulte:
 | `SECRET_KEY` | ✅ | Chave AES-256-GCM (32 caracteres) |
 | `TMDB_KEY` | ✅ | API Key da TMDB |
 | `PLATFORM_PASSWORD` | ✅ | Senha de acesso à plataforma local |
+| `PLATFORM_USER` | ✅ | Usuário de acesso à plataforma local |
 | `PORT` | — | Porta do servidor (padrão: `3001`) |
 | `NODE_ENV` | — | Ambiente (padrão: `development`) |
 | `JWT_EXPIRES_IN` | — | Expiração do JWT (padrão: `24h`) |
