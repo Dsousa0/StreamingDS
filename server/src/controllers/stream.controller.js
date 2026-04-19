@@ -53,6 +53,14 @@ exports.search = async (req, res) => {
   res.json(data)
 }
 
+exports.getWatchLink = async (req, res) => {
+  const { id, type = 'movie' } = req.query
+  const path = type === 'tv' ? `/tv/${id}/watch/providers` : `/movie/${id}/watch/providers`
+  const data = await tmdbGet(path, { watch_region: 'BR' })
+  const link = data.results?.BR?.link ?? null
+  res.json({ link })
+}
+
 exports.getGenres = async (req, res) => {
   const [movies, tv] = await Promise.all([
     tmdbGet('/genre/movie/list'),

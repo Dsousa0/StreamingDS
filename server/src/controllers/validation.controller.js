@@ -15,9 +15,92 @@ const STREAMER_CONFIG = {
     submitSelector: '#signInSubmit',
     successIndicator: 'amazon.com.br',
   },
+  'disney+': {
+    url: 'https://www.disneyplus.com/login',
+    emailSelector: 'input[data-testid="username"]',
+    passwordSelector: 'input[data-testid="password"]',
+    submitSelector: 'button[data-testid="login-button"]',
+    successIndicator: 'disneyplus.com/home',
+  },
+}
+
+async function validateHboMax(email, password) {
+  let browser
+  try {
+    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 800 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+
+    await page.goto('https://auth.hbomax.com/login', { waitUntil: 'domcontentloaded', timeout: 30_000 })
+
+    // Aceita o banner de cookies se aparecer
+    try {
+      await page.waitForSelector('[data-testid="consent-modal-button-0"]', { timeout: 8_000 })
+      await page.evaluate(() => document.querySelector('[data-testid="consent-modal-button-0"]').click())
+      await new Promise(r => setTimeout(r, 2000))
+    } catch { /* sem banner */ }
+
+    // Aguarda o campo de email aparecer
+    await page.waitForSelector('input[type="email"], input[name="email"], input[autocomplete="email"]', { timeout: 15_000 })
+
+    const emailSel = 'input[type="email"], input[name="email"], input[autocomplete="email"]'
+    await page.type(emailSel, email, { delay: 60 })
+
+    const passSel = 'input[type="password"]'
+    await page.waitForSelector(passSel, { timeout: 5_000 })
+    await page.type(passSel, password, { delay: 60 })
+
+    await page.keyboard.press('Enter')
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15_000 })
+
+    const url = page.url()
+    return url.includes('hbomax.com') && !url.includes('/login') && !url.includes('auth.')
+  } catch {
+    return false
+  } finally {
+    if (browser) await browser.close()
+  }
+}
+
+async function validateCrunchyroll(email, password) {
+  let browser
+  try {
+    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 800 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+
+    await page.goto('https://sso.crunchyroll.com/login', { waitUntil: 'networkidle2', timeout: 30_000 })
+
+    // Aceita cookies se aparecer
+    try {
+      await page.waitForSelector('#onetrust-accept-btn-handler', { timeout: 6_000 })
+      await page.click('#onetrust-accept-btn-handler')
+      await new Promise(r => setTimeout(r, 1500))
+    } catch { /* sem banner */ }
+
+    // Aguarda o form real (email + password visíveis após cookies)
+    await page.waitForSelector('input[name="email"]', { timeout: 10_000 })
+    await page.type('input[name="email"]', email, { delay: 60 })
+    await page.type('input[name="password"]', password, { delay: 60 })
+    await page.keyboard.press('Enter')
+
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15_000 })
+
+    const url = page.url()
+    return url.includes('crunchyroll.com') && !url.includes('/login')
+  } catch {
+    return false
+  } finally {
+    if (browser) await browser.close()
+  }
 }
 
 exports.validateCredential = async (streamer, email, password) => {
+  if (streamer.toLowerCase() === 'hbo max') return validateHboMax(email, password)
+  if (streamer.toLowerCase() === 'crunchyroll') return validateCrunchyroll(email, password)
+
   const config = STREAMER_CONFIG[streamer.toLowerCase()]
   if (!config) return false
 

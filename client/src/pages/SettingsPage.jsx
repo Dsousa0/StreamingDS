@@ -24,12 +24,16 @@ export default function SettingsPage() {
         providerId: PROVIDERS[streamer]?.providerId ?? null,
       })
       setToast({ message: 'Validando login no serviço...', type: 'info' })
-      await api.patch(`/api/credentials/${credential._id}/validate`)
+      const { data: validation } = await api.patch(`/api/credentials/${credential._id}/validate`)
       await refresh()
-      setToast({ message: 'Credencial salva e validada!', type: 'success' })
-      setStreamer('')
-      setEmail('')
-      setPassword('')
+      if (validation.active) {
+        setToast({ message: 'Credencial salva e validada!', type: 'success' })
+        setStreamer('')
+        setEmail('')
+        setPassword('')
+      } else {
+        setToast({ message: 'Credencial salva, mas o login falhou. Verifique e-mail e senha.', type: 'error' })
+      }
     } catch (err) {
       setToast({
         message: err.response?.data?.error?.message || 'Erro ao validar. Verifique as credenciais.',
@@ -37,6 +41,15 @@ export default function SettingsPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleToggle(id) {
+    try {
+      await api.patch(`/api/credentials/${id}/toggle`)
+      await refresh()
+    } catch {
+      setToast({ message: 'Erro ao alterar status.', type: 'error' })
     }
   }
 
@@ -106,13 +119,15 @@ export default function SettingsPage() {
               <span className="text-slate-500 text-sm ml-3">{c.email}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span
-                className={`text-xs px-2 py-1 rounded font-medium ${
+              <button
+                onClick={() => handleToggle(c._id)}
+                title="Clique para alternar status manualmente"
+                className={`text-xs px-2 py-1 rounded font-medium transition-opacity hover:opacity-70 ${
                   c.active ? 'bg-green-900 text-green-400' : 'bg-red-900/50 text-red-400'
                 }`}
               >
                 {c.active ? '✓ Ativo' : '✗ Inválido'}
-              </span>
+              </button>
               <button
                 onClick={() => handleDelete(c._id)}
                 className="text-slate-500 hover:text-red-400 transition-colors"

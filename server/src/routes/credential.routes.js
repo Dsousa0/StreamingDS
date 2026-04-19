@@ -7,6 +7,7 @@ router.use(authenticate)
 router.get('/', credentialController.list)
 router.post('/', credentialController.create)
 router.patch('/:id/validate', credentialController.validate)
+router.patch('/:id/toggle', credentialController.toggleActive)
 router.delete('/:id', credentialController.remove)
 
 module.exports = router

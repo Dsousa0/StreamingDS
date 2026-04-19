@@ -37,6 +37,14 @@ exports.validate = async (req, res) => {
   res.json({ active: credential.active, lastValidated: credential.lastValidated })
 }
 
+exports.toggleActive = async (req, res) => {
+  const credential = await Credential.findById(req.params.id)
+  if (!credential) throw new NotFoundError('Credencial')
+  credential.active = !credential.active
+  await credential.save()
+  res.json({ active: credential.active })
+}
+
 exports.remove = async (req, res) => {
   const credential = await Credential.findByIdAndDelete(req.params.id)
   if (!credential) throw new NotFoundError('Credencial')
