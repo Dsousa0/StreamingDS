@@ -5,6 +5,24 @@ Submodulo: agnostic-core/
 
 ---
 
+## REGRA OBRIGATORIA — README e agnostic-core
+
+Ao iniciar qualquer sessao de trabalho neste projeto:
+1. Leia agnostic-core/docs/skills-index.md para conhecer todos os skills e agents disponiveis
+2. Leia agnostic-core/docs/agent-routing-guide.md para saber qual skill/agent usar em cada tarefa
+3. Consulte o skill relevante ANTES de implementar qualquer feature ou correcao
+
+Apos QUALQUER alteracao no projeto (novo arquivo, novo endpoint, nova dependencia,
+novo componente, mudanca de arquitetura, fase concluida), atualize o README.md:
+- Refletir novos arquivos na secao "Estrutura do Projeto"
+- Atualizar tabela de fases (marcar fase como concluida se aplicavel)
+- Adicionar novas rotas de API na "API Reference"
+- Atualizar dependencias/variaveis se mudarem
+- Atualizar a tabela de "Skills aplicadas" se um novo skill for usado
+Esta regra e inegociavel — README.md e a fonte de verdade do projeto.
+
+---
+
 Antes de implementar:
 
 Backend:
