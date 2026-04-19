@@ -28,8 +28,8 @@ export default function DashboardPage() {
   const activeCredentials = credentials.filter((c) => c.active)
 
   function handleCardClick(item) {
-    const streamer = activeCredentials[0]?.streamer ?? null
-    navigate(`/player/${item.id}`, { state: { item, streamerName: streamer } })
+    const mediaType = item.title ? 'movie' : 'tv'
+    navigate(`/player/${item.id}`, { state: { item, mediaType } })
   }
 
   function switchTab(next) {

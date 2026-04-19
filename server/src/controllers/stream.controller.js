@@ -57,8 +57,19 @@ exports.getWatchLink = async (req, res) => {
   const { id, type = 'movie' } = req.query
   const path = type === 'tv' ? `/tv/${id}/watch/providers` : `/movie/${id}/watch/providers`
   const data = await tmdbGet(path, { watch_region: 'BR' })
-  const link = data.results?.BR?.link ?? null
-  res.json({ link })
+  const br = data.results?.BR ?? {}
+  const link = br.link ?? null
+
+  // Provedores disponíveis no BR (flatrate = assinatura)
+  const availableIds = (br.flatrate ?? []).map((p) => p.provider_id)
+
+  // Cruza com credenciais ativas do usuário
+  const activeCredentials = await Credential.find({ active: true })
+  const matched = activeCredentials
+    .filter((c) => c.providerId && availableIds.includes(c.providerId))
+    .map((c) => ({ streamer: c.streamer, providerId: c.providerId }))
+
+  res.json({ link, matched })
 }
 
 exports.getGenres = async (req, res) => {
