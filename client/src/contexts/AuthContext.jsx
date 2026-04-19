@@ -5,8 +5,21 @@ export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [autoLogging, setAutoLogging] = useState(!localStorage.getItem('token'))
 
   const isAuthenticated = Boolean(token)
+
+  // Auto-login via localhost ao abrir sem token
+  useEffect(() => {
+    if (token) { setAutoLogging(false); return }
+    api.get('/api/auth/auto-login')
+      .then(({ data }) => {
+        setToken(data.token)
+        localStorage.setItem('token', data.token)
+      })
+      .catch(() => {})
+      .finally(() => setAutoLogging(false))
+  }, [])
 
   const login = useCallback(async (username, password) => {
     const { data } = await api.post('/api/auth/login', { username, password })
@@ -29,6 +42,8 @@ export function AuthProvider({ children }) {
     )
     return () => api.interceptors.response.eject(id)
   }, [logout])
+
+  if (autoLogging) return null
 
   return (
     <AuthContext.Provider value={{ token, isAuthenticated, login, logout }}>
