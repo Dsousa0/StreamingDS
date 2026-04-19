@@ -73,8 +73,8 @@ function erudaPlugin() {
           init: function($el) {
             this._$el = $el;
             $el.html('<div style="padding:16px;"><h2 style="color:#fff;font-size:16px;margin:0 0 8px;">Debug Report</h2><p style="color:#999;font-size:12px;margin:0 0 16px;">Gera relatório Markdown para colar no Claude Code.</p><button id="eruda-copy-report" style="width:100%;padding:12px;border:none;border-radius:8px;background:#E10600;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📋 Copiar Relatório</button><pre id="eruda-report-preview" style="margin-top:16px;padding:12px;background:#1a1a1a;border-radius:8px;color:#ccc;font-size:10px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;display:none;"></pre></div>');
-            var btn = document.getElementById('eruda-copy-report');
-            var preview = document.getElementById('eruda-report-preview');
+            var btn = $el[0].querySelector('#eruda-copy-report');
+            var preview = $el[0].querySelector('#eruda-report-preview');
             btn.addEventListener('click', function() {
               var report = buildReport();
               preview.textContent = report;

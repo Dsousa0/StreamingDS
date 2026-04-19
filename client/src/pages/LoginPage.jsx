@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Toast from '../components/Toast'
 
@@ -11,10 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
 
-  if (isAuthenticated) {
-    navigate('/dashboard', { replace: true })
-    return null
-  }
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
   async function handleSubmit(e) {
     e.preventDefault()

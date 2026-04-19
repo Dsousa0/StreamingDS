@@ -1,6 +1,7 @@
 const axios = require('axios')
 const env = require('../config/env')
 const { ExternalServiceError } = require('../utils/errors')
+const { launchBrowser, UA } = require('../utils/browser')
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 
@@ -41,22 +42,47 @@ exports.search = async (req, res) => {
   res.json(data)
 }
 
-const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
-const MAX_RE = new RegExp(`https://play\\.(hbomax|max)\\.com/(movie|show)/${UUID_RE.source}`, 'i')
+// Mapeamento de nome do provider → domínios reconhecidos na URL
+const PROVIDER_DOMAINS = {
+  'Netflix':      ['netflix.com'],
+  'Prime Video':  ['primevideo.com', 'amazon.com.br/video', 'amazon.com/video'],
+  'HBO Max':      ['play.max.com', 'play.hbomax.com'],
+  'Disney+':      ['disneyplus.com'],
+  'Crunchyroll':  ['crunchyroll.com'],
+}
+
+const watchLinkCache = new Map()
+const CACHE_TTL = 30 * 60 * 1000
 
 async function extractDirectLinks(tmdbId, mediaType) {
-  const watchPageUrl = `https://www.themoviedb.org/${mediaType}/${tmdbId}/watch?locale=BR`
+  const key = `${tmdbId}_${mediaType}`
+  const cached = watchLinkCache.get(key)
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+
+  const watchUrl = `https://www.themoviedb.org/${mediaType}/${tmdbId}/watch?locale=BR`
+  let browser
   try {
-    const { data: html } = await axios.get(watchPageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' },
-      timeout: 8_000,
-    })
-    const links = {}
-    const maxMatch = html.match(MAX_RE)
-    if (maxMatch) links['HBO Max'] = maxMatch[0]
-    return links
+    browser = await launchBrowser()
+    const page = await browser.newPage()
+    await page.setUserAgent(UA)
+    await page.goto(watchUrl, { waitUntil: 'networkidle2', timeout: 20_000 })
+
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll('a[href]')].map((a) => a.href)
+    )
+
+    const result = {}
+    for (const [name, domains] of Object.entries(PROVIDER_DOMAINS)) {
+      const match = hrefs.find((h) => domains.some((d) => h.includes(d)))
+      if (match) result[name] = match
+    }
+
+    watchLinkCache.set(key, { data: result, ts: Date.now() })
+    return result
   } catch {
     return {}
+  } finally {
+    await browser?.close()
   }
 }
 
