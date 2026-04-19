@@ -98,7 +98,6 @@ export default function DashboardPage() {
               <MovieCard
                 key={item.id}
                 item={item}
-                streamerName={activeCredentials[0]?.streamer}
                 onClick={() => handleCardClick(item)}
               />
             ))}

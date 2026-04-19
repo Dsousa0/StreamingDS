@@ -18,12 +18,14 @@ export default function PlayerPage() {
 
   useEffect(() => {
     if (!item) { setLoading(false); return }
+    setWatchData(null)
+    setLoading(true)
     api
       .get('/api/stream/watch-link', { params: { id: tmdbId, type: mediaType } })
       .then(({ data }) => setWatchData(data))
       .catch(() => setWatchData({ link: null, matched: [] }))
       .finally(() => setLoading(false))
-  }, [tmdbId, mediaType, item])
+  }, [tmdbId, mediaType])
 
   if (!item) {
     return (
