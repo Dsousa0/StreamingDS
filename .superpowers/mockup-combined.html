@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streaming Hub — Direção Combinada</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #080808; color: #fff; font-family: 'Inter', sans-serif; }
+
+/* PAGE WRAPPER */
+.page { display: flex; height: 100vh; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 60px;
+  background: #0e0e0e;
+  border-right: 1px solid #1c1c1c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 0;
+  gap: 0;
+  flex-shrink: 0;
+}
+.sidebar .logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: #c8a96e;
+  margin-bottom: 32px;
+  letter-spacing: -1px;
+}
+.sidebar .nav-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #3a3a3a;
+  font-size: 17px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar .nav-icon:hover { color: #888; }
+.sidebar .nav-icon.active { background: #c8a96e14; color: #c8a96e; }
+.sidebar .spacer { flex: 1; }
+.sidebar .logout { color: #2a2a2a; font-size: 17px; cursor: pointer; }
+.sidebar .logout:hover { color: #c0392b; }
+
+/* MAIN */
+.main { flex: 1; overflow-y: auto; background: #0a0a0a; }
+
+/* HERO */
+.hero {
+  position: relative;
+  height: 340px;
+  background: linear-gradient(90deg, #0a0a0a 0%, rgba(10,10,10,0.7) 40%, transparent 100%),
+              url('https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px 36px;
+}
+.hero-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #c8a96e;
+  margin-bottom: 10px;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+.hero-meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-meta span { display: flex; align-items: center; gap: 4px; }
+.hero-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: #444; }
+.hero-rating { color: #c8a96e; font-weight: 600; }
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #c8a96e;
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  letter-spacing: 0.3px;
+}
+.hero-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: #fff;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #2a2a2a;
+  margin-left: 10px;
+}
+.hero-gradient-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(transparent, #0a0a0a);
+}
+
+/* CATALOG */
+.catalog { padding: 32px 36px; }
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 700;
+}
+.section-sub {
+  font-size: 11px;
+  color: #444;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.see-all {
+  font-size: 11px;
+  color: #c8a96e;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.see-all:hover { opacity: 1; }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.card {
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  background: #161616;
+  cursor: pointer;
+  group: true;
+}
+.card img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s, filter 0.3s;
+  filter: brightness(0.85);
+}
+.card:hover img { transform: scale(1.04); filter: brightness(1); }
+.card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.85) 100%);
+  opacity: 0;
+  transition: opacity 0.25s;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 10px;
+}
+.card:hover .card-overlay { opacity: 1; }
+.card-title { font-size: 11px; font-weight: 600; color: #fff; line-height: 1.3; }
+.card-year { font-size: 10px; color: #999; margin-top: 2px; }
+.card-provider {
+  position: absolute;
+  top: 7px; right: 7px;
+  background: #c8a96e;
+  color: #000;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* SEARCH BAR */
+.topbar {
+  padding: 20px 36px 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.search {
+  flex: 1;
+  background: #141414;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #666;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; gap: 10px;
+  transition: border-color 0.2s;
+}
+.search:hover { border-color: #2a2a2a; }
+.search-icon { color: #333; }
+.filter-btn {
+  background: #141414;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #555;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.filter-btn:hover { border-color: #c8a96e; color: #c8a96e; }
+.tab-row { display: flex; gap: 0; margin-top: 20px; padding: 0 36px; border-bottom: 1px solid #141414; }
+.tab {
+  font-size: 13px; font-weight: 500;
+  padding: 10px 0; margin-right: 28px;
+  color: #3a3a3a; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab.active { color: #fff; border-bottom-color: #c8a96e; }
+.tab:hover { color: #888; }
+
+/* ANNOTATION */
+.annotation {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #161616; border: 1px solid #2a2a2a;
+  border-radius: 12px; padding: 14px 18px;
+  font-size: 12px; color: #666; max-width: 260px;
+  line-height: 1.6;
+}
+.annotation strong { color: #c8a96e; display: block; margin-bottom: 6px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">◈</div>
+    <div class="nav-icon active" title="Dashboard">⊟</div>
+    <div class="nav-icon" title="Configurações">⚙</div>
+    <div class="nav-icon" title="Usuários">◎</div>
+    <div class="spacer"></div>
+    <div class="logout" title="Sair">⏻</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- HERO -->
+    <div class="hero">
+      <div>
+        <div class="hero-badge">◈ Em destaque · HBO Max</div>
+        <div class="hero-title">Interestelar</div>
+        <div class="hero-meta">
+          <span class="hero-rating">★ 8.7</span>
+          <span class="dot"></span>
+          <span>2014</span>
+          <span class="dot"></span>
+          <span>2h 49min</span>
+          <span class="dot"></span>
+          <span>Christopher Nolan</span>
+        </div>
+        <button class="hero-btn">▶ Assistir agora</button>
+        <button class="hero-btn-outline">+ Mais informações</button>
+      </div>
+      <div class="hero-gradient-bottom"></div>
+    </div>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search">
+        <span class="search-icon">⌕</span>
+        Buscar filmes e séries...
+      </div>
+      <div class="filter-btn">Gênero ▾</div>
+    </div>
+
+    <div class="tab-row">
+      <div class="tab active">Filmes</div>
+      <div class="tab">Séries</div>
+    </div>
+
+    <!-- CATALOG -->
+    <div class="catalog">
+      <div class="section-header">
+        <div>
+          <div class="section-sub">Disponível nos seus serviços</div>
+          <div class="section-title">Catálogo</div>
+        </div>
+        <div class="see-all">Ver todos →</div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" alt="">
+          <span class="card-provider">Max</span>
+          <div class="card-overlay">
+            <div class="card-title">Interestelar</div>
+            <div class="card-year">2014</div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" alt="">
+          <div class="card-overlay">
+            <div class="card-title">Oppenheimer</div>
+            <div class="card-year">2023</div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/xJHokMbljvjADYdit5fK5VQsXEG.jpg" alt="">
+          <span class="card-provider">Max</span>
+          <div class="card-overlay">
+            <div class="card-title">Duna</div>
+            <div class="card-year">2021</div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/6FfCtAuVAW8XJjZ7eWeLibRLWTw.jpg" alt="">
+          <div class="card-overlay">
+            <div class="card-title">Tenet</div>
+            <div class="card-year">2020</div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="">
+          <div class="card-overlay">
+            <div class="card-title">Prestige</div>
+            <div class="card-year">2006</div>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w185/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg" alt="">
+          <span class="card-provider">Prime</span>
+          <div class="card-overlay">
+            <div class="card-title">Blade Runner 2049</div>
+            <div class="card-year">2017</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="annotation">
+  <strong>Direção combinada</strong>
+  Sidebar compacta + dourado do A<br>
+  Layout com banner + tipografia serifada do B<br>
+  Hover nos cards revela título e ano
+</div>
+
+</body>
+</html>
