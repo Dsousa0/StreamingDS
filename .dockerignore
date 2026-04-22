@@ -1,0 +1,15 @@
+node_modules
+client/node_modules
+server/node_modules
+.git
+.env
+dist
+build
+.claude
+.superpowers
+.agnostic-core
+docs
+*.log
+*.md
+Instruções.md
+IMPLEMENTATION_LOG.md
