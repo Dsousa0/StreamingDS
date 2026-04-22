@@ -33,6 +33,12 @@ class ConflictError extends AppError {
   }
 }
 
+class ForbiddenError extends AppError {
+  constructor(message = 'Acesso negado') {
+    super(message, 403, 'FORBIDDEN')
+  }
+}
+
 class ExternalServiceError extends AppError {
   constructor(message = 'Serviço externo indisponível', code = 'EXTERNAL_ERROR') {
     super(message, 502, code)
@@ -44,6 +50,7 @@ module.exports = {
   NotFoundError,
   ValidationError,
   UnauthorizedError,
+  ForbiddenError,
   ConflictError,
   ExternalServiceError,
 }

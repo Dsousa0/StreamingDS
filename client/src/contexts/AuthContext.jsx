@@ -1,6 +1,16 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import api from '../services/api'
 
+function parseToken(token) {
+  if (!token) return { role: null, username: null }
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return { role: payload.role ?? null, username: payload.username ?? null }
+  } catch {
+    return { role: null, username: null }
+  }
+}
+
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
@@ -8,6 +18,7 @@ export function AuthProvider({ children }) {
   const [autoLogging, setAutoLogging] = useState(!localStorage.getItem('token'))
 
   const isAuthenticated = Boolean(token)
+  const { role, username } = parseToken(token)
 
   // Auto-login via localhost ao abrir sem token
   useEffect(() => {
@@ -46,7 +57,7 @@ export function AuthProvider({ children }) {
   if (autoLogging) return null
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated, role, username, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

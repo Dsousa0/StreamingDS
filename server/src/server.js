@@ -6,6 +6,9 @@ const env = require('./config/env')
 const start = async () => {
   await connectDB()
 
+  const { seedAdmin } = require('./controllers/auth.controller')
+  await seedAdmin()
+
   const server = app.listen(env.PORT, () => {
     console.log(`[Server] Rodando na porta ${env.PORT} (${env.NODE_ENV})`)
   })
