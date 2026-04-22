@@ -46,7 +46,8 @@ export default function UsersPage() {
     'w-full bg-transparent border-b border-hub-border py-2.5 text-hub-text text-sm focus:outline-none focus:border-hub-gold transition-colors duration-200 placeholder-hub-faint/50'
 
   return (
-    <div className="px-9 py-8 max-w-md">
+    <div className="min-h-full flex items-center justify-center px-9 py-8">
+      <div className="w-full max-w-md">
       <div className="flex items-center gap-4 mb-8">
         <span className="text-hub-gold text-xs flex-shrink-0">◈</span>
         <div className="flex-shrink-0">
@@ -117,6 +118,7 @@ export default function UsersPage() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      </div>
     </div>
   )
 }

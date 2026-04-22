@@ -5,7 +5,8 @@ export default function SettingsPage() {
   const { selected, toggle } = useCredentials()
 
   return (
-    <div className="px-9 py-8 max-w-md">
+    <div className="min-h-full flex items-center justify-center px-9 py-8">
+      <div className="w-full max-w-md">
       <div className="flex items-center gap-4 mb-8">
         <span className="text-hub-gold text-xs flex-shrink-0">◈</span>
         <div className="flex-shrink-0">
@@ -43,6 +44,7 @@ export default function SettingsPage() {
             </button>
           )
         })}
+      </div>
       </div>
     </div>
   )
