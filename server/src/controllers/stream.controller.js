@@ -37,9 +37,35 @@ exports.getSeries = async (req, res) => {
 }
 
 exports.search = async (req, res) => {
-  const { q, page = 1 } = req.query
+  const { q, page = 1, providers } = req.query
   const data = await tmdbGet('/search/multi', { query: q, page })
-  res.json(data)
+
+  if (!providers) return res.json(data)
+
+  const providerIds = providers.split('|').map(Number)
+  const items = (data.results || []).filter(
+    (r) => r.media_type === 'movie' || r.media_type === 'tv'
+  )
+
+  const filtered = (
+    await Promise.all(
+      items.map(async (item) => {
+        try {
+          const path =
+            item.media_type === 'tv'
+              ? `/tv/${item.id}/watch/providers`
+              : `/movie/${item.id}/watch/providers`
+          const pData = await tmdbGet(path, { watch_region: 'BR' })
+          const flatrate = (pData.results?.BR?.flatrate ?? []).map((p) => p.provider_id)
+          return flatrate.some((id) => providerIds.includes(id)) ? item : null
+        } catch {
+          return null
+        }
+      })
+    )
+  ).filter(Boolean)
+
+  res.json({ ...data, results: filtered })
 }
 
 // Mapeamento de nome do provider → domínios reconhecidos na URL
