@@ -126,6 +126,17 @@ exports.getWatchLink = async (req, res) => {
   res.json({ link, flatrate, directLinks })
 }
 
+exports.getTVDetails = async (req, res) => {
+  const data = await tmdbGet(`/tv/${req.params.id}`)
+  res.json(data)
+}
+
+exports.getSeason = async (req, res) => {
+  const { id, n } = req.params
+  const data = await tmdbGet(`/tv/${id}/season/${n}`)
+  res.json(data)
+}
+
 exports.getGenres = async (req, res) => {
   const [movies, tv] = await Promise.all([
     tmdbGet('/genre/movie/list'),
