@@ -26,40 +26,50 @@ export default function LoginPage() {
     }
   }
 
+  const inputClass =
+    'w-full bg-hub-muted border border-hub-border rounded-lg px-4 py-2.5 text-sm text-hub-text placeholder-hub-faint focus:outline-none focus:border-hub-gold transition-colors duration-200'
+
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <div className="bg-slate-800 rounded-xl p-8 w-80 shadow-2xl">
-        <h1 className="text-sky-400 text-xl font-bold text-center mb-1">◈ Streaming Hub</h1>
-        <p className="text-slate-500 text-xs text-center mb-6">Acesso local</p>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            placeholder="Usuário"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-400"
-            required
-            autoComplete="username"
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-400"
-            required
-            autoComplete="current-password"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-sky-400 text-slate-900 font-bold py-2 rounded-lg text-sm hover:bg-sky-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Entrando...' : 'ENTRAR'}
-          </button>
-        </form>
-        <p className="text-slate-600 text-xs text-center mt-4">5 tentativas / 15 min</p>
+    <div className="min-h-screen bg-hub-bg flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-10">
+          <div className="font-display text-5xl text-hub-gold mb-3">◈</div>
+          <h1 className="font-display text-2xl text-hub-text">Streaming Hub</h1>
+          <p className="text-hub-faint text-xs mt-1 tracking-widest uppercase">Acesso local</p>
+        </div>
+
+        <div className="bg-hub-surface border border-hub-border rounded-2xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Usuário"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={inputClass}
+              required
+              autoComplete="username"
+            />
+            <input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass}
+              required
+              autoComplete="current-password"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-hub-gold text-black font-semibold py-2.5 rounded-lg text-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 mt-2"
+            >
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+          <p className="text-hub-faint text-[11px] text-center mt-5">5 tentativas · 15 min</p>
+        </div>
       </div>
+
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   )

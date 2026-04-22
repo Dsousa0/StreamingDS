@@ -5,7 +5,7 @@ import { useCredentials } from '../contexts/CredentialsContext'
 import api from '../services/api'
 
 const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w185'
-const TMDB_IMG_BG = 'https://image.tmdb.org/t/p/w780'
+const TMDB_IMG_BG = 'https://image.tmdb.org/t/p/w1280'
 
 export default function PlayerPage() {
   const { tmdbId } = useParams()
@@ -31,82 +31,77 @@ export default function PlayerPage() {
 
   if (!item) {
     return (
-      <div className="p-6">
+      <div className="min-h-full bg-hub-bg p-8">
         <button
           onClick={() => navigate('/dashboard')}
-          className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-sm hover:bg-slate-700 transition-colors"
+          className="text-hub-sub hover:text-hub-text text-sm transition-colors duration-150"
         >
           ← Voltar
         </button>
-        <p className="text-slate-500 text-sm mt-6">Conteúdo não encontrado.</p>
+        <p className="text-hub-faint text-sm mt-8">Conteúdo não encontrado.</p>
       </div>
     )
   }
 
-  const title = item.title || item.name
-  const posterUrl = item.poster_path ? `${TMDB_IMG_SM}${item.poster_path}` : null
+  const title      = item.title || item.name
+  const posterUrl  = item.poster_path    ? `${TMDB_IMG_SM}${item.poster_path}`   : null
   const backdropUrl = item.backdrop_path ? `${TMDB_IMG_BG}${item.backdrop_path}` : null
-  const year = (item.release_date || item.first_air_date || '').slice(0, 4)
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : null
+  const year       = (item.release_date || item.first_air_date || '').slice(0, 4)
+  const rating     = item.vote_average ? item.vote_average.toFixed(1) : null
+  const watchLink  = watchData?.link ?? null
 
-  const watchLink = watchData?.link ?? null
-
-  // Filtra pelos streamers selecionados pelo usuário que têm o título disponível
   const matched = (watchData?.flatrate ?? []).filter((p) =>
     activeProviderIds.includes(p.providerId)
   )
-
-  // Mapeia providerId → nome do provider no PROVIDERS
   const providerByIdMap = Object.entries(PROVIDERS).reduce((acc, [name, cfg]) => {
     acc[cfg.providerId] = { name, ...cfg }
     return acc
   }, {})
 
   return (
-    <div className="min-h-full bg-slate-900">
+    <div className="min-h-full bg-hub-bg">
       {backdropUrl && (
-        <div className="relative w-full h-48 overflow-hidden">
-          <img src={backdropUrl} alt="" className="w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900" />
+        <div className="relative w-full h-64 overflow-hidden">
+          <img src={backdropUrl} alt="" className="w-full h-full object-cover opacity-25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-hub-bg" />
         </div>
       )}
 
-      <div className="p-4 -mt-10 relative">
-        <div className="flex items-center gap-3 mb-5">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-sm hover:bg-slate-700 transition-colors flex-shrink-0"
-          >
-            ← Voltar
-          </button>
-          <h1 className="text-slate-100 font-bold text-lg leading-tight">{title}</h1>
-        </div>
+      <div className={`px-8 pb-12 ${backdropUrl ? '-mt-16 relative' : 'pt-8'}`}>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="text-hub-sub hover:text-hub-gold text-sm transition-colors duration-150 mb-6 flex items-center gap-1"
+        >
+          ← Voltar
+        </button>
 
-        <div className="flex gap-5">
+        <div className="flex gap-7">
           {posterUrl && (
             <img
               src={posterUrl}
               alt={title}
-              className="w-28 rounded-xl flex-shrink-0 object-cover shadow-lg"
+              className="w-32 rounded-xl flex-shrink-0 object-cover shadow-2xl"
             />
           )}
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
-              {year && <span className="text-slate-400 text-sm">{year}</span>}
+            <h1 className="font-display text-3xl font-bold text-hub-text leading-tight mb-3">
+              {title}
+            </h1>
+
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              {year && <span className="text-hub-sub text-sm">{year}</span>}
               {rating && (
-                <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded font-medium">
-                  ★ {rating}
-                </span>
+                <span className="text-hub-gold text-sm font-semibold">★ {rating}</span>
               )}
             </div>
 
-            <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 mb-5">
+            <p className="text-hub-sub text-sm leading-relaxed line-clamp-4 mb-6 max-w-xl">
               {item.overview || 'Sem descrição disponível.'}
             </p>
 
             {loading ? (
-              <div className="h-10 w-40 bg-slate-700 animate-pulse rounded-lg" />
+              <div className="h-10 w-44 bg-hub-card animate-pulse rounded-lg" />
             ) : matched.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {matched.map(({ providerId }) => {
@@ -120,7 +115,7 @@ export default function PlayerPage() {
                         const url = direct || watchData?.link || provider.searchUrl(title, mediaType)
                         window.open(url, '_blank', 'noopener,noreferrer')
                       }}
-                      className="flex items-center gap-2 font-bold px-5 py-2.5 rounded-lg text-sm transition-colors bg-sky-500 hover:bg-sky-400 text-white"
+                      className="inline-flex items-center gap-2 bg-hub-gold text-black font-semibold px-6 py-2.5 rounded-lg text-sm hover:brightness-110 transition-all duration-150 w-fit"
                     >
                       ▶ Assistir no {provider.name}
                     </button>
@@ -129,10 +124,14 @@ export default function PlayerPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-slate-500 text-sm">Este título não está disponível nos seus serviços.</p>
+                <p className="text-hub-faint text-sm">Não disponível nos seus serviços.</p>
                 {watchLink && (
-                  <a href={watchLink} target="_blank" rel="noopener noreferrer"
-                    className="inline-block text-sky-400 hover:text-sky-300 text-sm underline transition-colors">
+                  <a
+                    href={watchLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-hub-gold hover:underline text-sm transition-colors"
+                  >
                     Ver onde assistir →
                   </a>
                 )}

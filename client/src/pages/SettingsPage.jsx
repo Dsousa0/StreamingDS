@@ -5,25 +5,28 @@ export default function SettingsPage() {
   const { selected, toggle } = useCredentials()
 
   return (
-    <div className="p-6 max-w-md">
-      <h1 className="text-slate-100 text-lg font-bold mb-2">Meus Serviços</h1>
-      <p className="text-slate-500 text-sm mb-6">Selecione os serviços que você assina para filtrar o catálogo.</p>
+    <div className="px-9 py-8 max-w-lg">
+      <p className="text-hub-faint text-[10px] font-semibold tracking-[2px] uppercase mb-1">Configurações</p>
+      <h1 className="font-display text-2xl text-hub-text mb-1">Meus Serviços</h1>
+      <p className="text-hub-sub text-sm mb-8">Selecione os serviços que você assina para filtrar o catálogo.</p>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {PROVIDER_NAMES.map((name) => {
           const active = selected.includes(name)
           return (
             <button
               key={name}
               onClick={() => toggle(name)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
+              className={`w-full flex items-center justify-between px-5 py-3.5 rounded-xl border transition-colors duration-150 ${
                 active
-                  ? 'bg-sky-500/10 border-sky-500 text-sky-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                  ? 'bg-hub-gold-dim border-hub-gold text-hub-gold'
+                  : 'bg-hub-card border-hub-border text-hub-sub hover:border-hub-faint'
               }`}
             >
-              <span className="font-medium">{name}</span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded ${active ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-500'}`}>
+              <span className="font-medium text-sm">{name}</span>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${
+                active ? 'bg-hub-gold text-black' : 'bg-hub-muted text-hub-faint'
+              }`}>
                 {active ? 'Ativo' : 'Inativo'}
               </span>
             </button>
