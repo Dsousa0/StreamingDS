@@ -13,6 +13,7 @@ const authRoutes = require('./routes/auth.routes')
 const streamRoutes = require('./routes/stream.routes')
 const credentialRoutes = require('./routes/credential.routes')
 const userRoutes = require('./routes/user.routes')
+const watchedRoutes = require('./routes/watched.routes')
 
 const app = express()
 
@@ -83,6 +84,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/stream', streamRoutes)
 app.use('/api/credentials', credentialRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/watched', watchedRoutes)
 
 // 8. 404
 app.use((req, res) => {

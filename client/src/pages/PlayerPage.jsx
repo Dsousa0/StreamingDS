@@ -6,15 +6,10 @@ import api from '../services/api'
 
 const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w342'
 const TMDB_IMG_BG = 'https://image.tmdb.org/t/p/w1280'
-const STORAGE_KEY = 'streamhub_watched'
 
 function fmtDate(str) {
   if (!str) return ''
   return new Date(str).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function loadWatched() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
 }
 
 function epKey(season, episode) {
@@ -34,23 +29,34 @@ export default function PlayerPage() {
   const [selectedSeason, setSelectedSeason] = useState(null)
   const [episodes, setEpisodes]             = useState([])
   const [epsLoading, setEpsLoading]         = useState(false)
-  const [watched, setWatched]               = useState(() => loadWatched()[tmdbId] || {})
+  const [watchedSet, setWatchedSet]         = useState(new Set())
 
   const item      = state?.item
   const mediaType = state?.mediaType ?? (item?.title ? 'movie' : 'tv')
   const isTV      = mediaType === 'tv'
 
-  const toggleWatched = useCallback((season, episode) => {
+  // Load watched episodes from backend
+  useEffect(() => {
+    if (!isTV) return
+    api.get(`/api/watched/${tmdbId}`)
+      .then(({ data }) => setWatchedSet(new Set(data.episodes)))
+      .catch(() => {})
+  }, [tmdbId, isTV])
+
+  const toggleWatched = useCallback(async (season, episode) => {
     const key = epKey(season, episode)
-    setWatched((prev) => {
-      const next = { ...prev, [key]: !prev[key] }
-      if (!next[key]) delete next[key]
-      const all = loadWatched()
-      if (Object.keys(next).length === 0) delete all[tmdbId]
-      else all[tmdbId] = next
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
-      return next
-    })
+    try {
+      const { data } = await api.post(`/api/watched/${tmdbId}/toggle`, { season, episode })
+      setWatchedSet(new Set(data.episodes))
+    } catch {
+      // optimistic fallback
+      setWatchedSet((prev) => {
+        const next = new Set(prev)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        return next
+      })
+    }
   }, [tmdbId])
 
   // Watch providers
@@ -121,7 +127,7 @@ export default function PlayerPage() {
   const currentSeason = seasons.find((s) => s.season_number === selectedSeason)
 
   const watchedCountInSeason = selectedSeason
-    ? episodes.filter((ep) => watched[epKey(selectedSeason, ep.episode_number)]).length
+    ? episodes.filter((ep) => watchedSet.has(epKey(selectedSeason, ep.episode_number))).length
     : 0
 
   return (
@@ -235,7 +241,7 @@ export default function PlayerPage() {
             ) : (
               <div className="flex gap-2 flex-wrap mb-8">
                 {seasons.map((s) => {
-                  const seasonWatched = Object.keys(watched).filter(
+                  const seasonWatched = [...watchedSet].filter(
                     (k) => k.startsWith(`s${s.season_number}e`)
                   ).length
                   return (
@@ -283,7 +289,7 @@ export default function PlayerPage() {
                 ) : (
                   <div className="divide-y divide-hub-border/30">
                     {episodes.map((ep) => {
-                      const isWatched = !!watched[epKey(selectedSeason, ep.episode_number)]
+                      const isWatched = watchedSet.has(epKey(selectedSeason, ep.episode_number))
                       return (
                         <div
                           key={ep.episode_number}
