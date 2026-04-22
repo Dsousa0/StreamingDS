@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { PROVIDERS } from '../services/providers'
 import { useCredentials } from '../contexts/CredentialsContext'
@@ -6,10 +6,19 @@ import api from '../services/api'
 
 const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w342'
 const TMDB_IMG_BG = 'https://image.tmdb.org/t/p/w1280'
+const STORAGE_KEY = 'streamhub_watched'
 
 function fmtDate(str) {
   if (!str) return ''
   return new Date(str).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function loadWatched() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
+}
+
+function epKey(season, episode) {
+  return `s${season}e${episode}`
 }
 
 export default function PlayerPage() {
@@ -18,17 +27,31 @@ export default function PlayerPage() {
   const navigate = useNavigate()
   const { activeProviderIds } = useCredentials()
 
-  const [watchData, setWatchData]       = useState(null)
-  const [watchLoading, setWatchLoading] = useState(true)
-  const [seasons, setSeasons]           = useState([])
+  const [watchData, setWatchData]           = useState(null)
+  const [watchLoading, setWatchLoading]     = useState(true)
+  const [seasons, setSeasons]               = useState([])
   const [seasonsLoading, setSeasonsLoading] = useState(false)
   const [selectedSeason, setSelectedSeason] = useState(null)
-  const [episodes, setEpisodes]         = useState([])
-  const [epsLoading, setEpsLoading]     = useState(false)
+  const [episodes, setEpisodes]             = useState([])
+  const [epsLoading, setEpsLoading]         = useState(false)
+  const [watched, setWatched]               = useState(() => loadWatched()[tmdbId] || {})
 
   const item      = state?.item
   const mediaType = state?.mediaType ?? (item?.title ? 'movie' : 'tv')
   const isTV      = mediaType === 'tv'
+
+  const toggleWatched = useCallback((season, episode) => {
+    const key = epKey(season, episode)
+    setWatched((prev) => {
+      const next = { ...prev, [key]: !prev[key] }
+      if (!next[key]) delete next[key]
+      const all = loadWatched()
+      if (Object.keys(next).length === 0) delete all[tmdbId]
+      else all[tmdbId] = next
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
+      return next
+    })
+  }, [tmdbId])
 
   // Watch providers
   useEffect(() => {
@@ -96,6 +119,10 @@ export default function PlayerPage() {
   }, {})
 
   const currentSeason = seasons.find((s) => s.season_number === selectedSeason)
+
+  const watchedCountInSeason = selectedSeason
+    ? episodes.filter((ep) => watched[epKey(selectedSeason, ep.episode_number)]).length
+    : 0
 
   return (
     <div className="min-h-full bg-hub-bg">
@@ -207,19 +234,27 @@ export default function PlayerPage() {
               </div>
             ) : (
               <div className="flex gap-2 flex-wrap mb-8">
-                {seasons.map((s) => (
-                  <button
-                    key={s.season_number}
-                    onClick={() => setSelectedSeason(s.season_number)}
-                    className={`px-4 py-1.5 text-sm font-medium transition-all duration-150 border ${
-                      selectedSeason === s.season_number
-                        ? 'border-hub-gold text-hub-gold bg-hub-gold-dim'
-                        : 'border-hub-border text-hub-faint hover:border-hub-faint hover:text-hub-sub'
-                    }`}
-                  >
-                    T{s.season_number}
-                  </button>
-                ))}
+                {seasons.map((s) => {
+                  const seasonWatched = Object.keys(watched).filter(
+                    (k) => k.startsWith(`s${s.season_number}e`)
+                  ).length
+                  return (
+                    <button
+                      key={s.season_number}
+                      onClick={() => setSelectedSeason(s.season_number)}
+                      className={`relative px-4 py-1.5 text-sm font-medium transition-all duration-150 border ${
+                        selectedSeason === s.season_number
+                          ? 'border-hub-gold text-hub-gold bg-hub-gold-dim'
+                          : 'border-hub-border text-hub-faint hover:border-hub-faint hover:text-hub-sub'
+                      }`}
+                    >
+                      T{s.season_number}
+                      {seasonWatched > 0 && (
+                        <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-hub-gold" />
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             )}
 
@@ -227,9 +262,16 @@ export default function PlayerPage() {
             {selectedSeason && (
               <>
                 {currentSeason && (
-                  <p className="text-hub-faint text-[9px] tracking-[2px] uppercase font-semibold mb-5">
-                    Temporada {selectedSeason} · {currentSeason.episode_count} episódio{currentSeason.episode_count !== 1 ? 's' : ''}
-                  </p>
+                  <div className="flex items-center justify-between mb-5">
+                    <p className="text-hub-faint text-[9px] tracking-[2px] uppercase font-semibold">
+                      Temporada {selectedSeason} · {currentSeason.episode_count} episódio{currentSeason.episode_count !== 1 ? 's' : ''}
+                    </p>
+                    {episodes.length > 0 && (
+                      <p className="font-mono text-hub-faint text-[9px] tracking-widest">
+                        {watchedCountInSeason}/{episodes.length} assistidos
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {epsLoading ? (
@@ -240,37 +282,60 @@ export default function PlayerPage() {
                   </div>
                 ) : (
                   <div className="divide-y divide-hub-border/30">
-                    {episodes.map((ep) => (
-                      <div key={ep.episode_number} className="py-4 flex items-start gap-5 group">
-                        <span className="font-mono text-hub-faint text-sm w-7 flex-shrink-0 pt-0.5 group-hover:text-hub-gold transition-colors duration-150">
-                          {String(ep.episode_number).padStart(2, '0')}
-                        </span>
+                    {episodes.map((ep) => {
+                      const isWatched = !!watched[epKey(selectedSeason, ep.episode_number)]
+                      return (
+                        <div
+                          key={ep.episode_number}
+                          className={`py-4 flex items-start gap-5 group transition-opacity duration-150 ${isWatched ? 'opacity-50' : ''}`}
+                        >
+                          {/* Watched toggle */}
+                          <button
+                            onClick={() => toggleWatched(selectedSeason, ep.episode_number)}
+                            title={isWatched ? 'Marcar como não assistido' : 'Marcar como assistido'}
+                            className="flex-shrink-0 mt-0.5 w-4 h-4 border transition-all duration-150 flex items-center justify-center"
+                            style={{
+                              borderColor: isWatched ? '#c8a96e' : 'rgba(255,255,255,0.12)',
+                              backgroundColor: isWatched ? 'rgba(200,169,110,0.15)' : 'transparent',
+                            }}
+                          >
+                            {isWatched && (
+                              <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                                <path d="M1 3L3 5L7 1" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </button>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline justify-between gap-6 mb-1">
-                            <span className="text-hub-text text-sm font-medium leading-snug">
-                              {ep.name}
-                            </span>
-                            {ep.air_date && (
-                              <span className="font-mono text-hub-faint text-[10px] tracking-wide flex-shrink-0">
-                                {fmtDate(ep.air_date)}
+                          <span className="font-mono text-hub-faint text-sm w-7 flex-shrink-0 pt-0.5 group-hover:text-hub-gold transition-colors duration-150">
+                            {String(ep.episode_number).padStart(2, '0')}
+                          </span>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-6 mb-1">
+                              <span className={`text-sm font-medium leading-snug transition-colors duration-150 ${isWatched ? 'text-hub-faint' : 'text-hub-text'}`}>
+                                {ep.name}
                               </span>
+                              {ep.air_date && (
+                                <span className="font-mono text-hub-faint text-[10px] tracking-wide flex-shrink-0">
+                                  {fmtDate(ep.air_date)}
+                                </span>
+                              )}
+                            </div>
+                            {ep.overview && (
+                              <p className="text-hub-sub text-xs leading-relaxed line-clamp-2">
+                                {ep.overview}
+                              </p>
                             )}
                           </div>
-                          {ep.overview && (
-                            <p className="text-hub-sub text-xs leading-relaxed line-clamp-2">
-                              {ep.overview}
-                            </p>
+
+                          {ep.runtime > 0 && (
+                            <span className="font-mono text-hub-faint text-[10px] flex-shrink-0 pt-0.5">
+                              {ep.runtime}min
+                            </span>
                           )}
                         </div>
-
-                        {ep.runtime > 0 && (
-                          <span className="font-mono text-hub-faint text-[10px] flex-shrink-0 pt-0.5">
-                            {ep.runtime}min
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </>
