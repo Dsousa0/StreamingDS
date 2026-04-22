@@ -4,7 +4,7 @@ import { PROVIDERS } from '../services/providers'
 import { useCredentials } from '../contexts/CredentialsContext'
 import api from '../services/api'
 
-const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w185'
+const TMDB_IMG_SM = 'https://image.tmdb.org/t/p/w342'
 const TMDB_IMG_BG = 'https://image.tmdb.org/t/p/w1280'
 
 export default function PlayerPage() {
@@ -34,9 +34,9 @@ export default function PlayerPage() {
       <div className="min-h-full bg-hub-bg p-8">
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-hub-sub hover:text-hub-text text-sm transition-colors duration-150"
+          className="text-hub-faint hover:text-hub-gold text-sm transition-colors duration-150 tracking-wide"
         >
-          ← Voltar
+          ← voltar
         </button>
         <p className="text-hub-faint text-sm mt-8">Conteúdo não encontrado.</p>
       </div>
@@ -60,48 +60,62 @@ export default function PlayerPage() {
 
   return (
     <div className="min-h-full bg-hub-bg">
+      {/* Backdrop */}
       {backdropUrl && (
-        <div className="relative w-full h-64 overflow-hidden">
-          <img src={backdropUrl} alt="" className="w-full h-full object-cover opacity-25" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-hub-bg" />
+        <div className="relative w-full h-72 overflow-hidden">
+          <img src={backdropUrl} alt="" className="w-full h-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-hub-bg" />
+          <div className="absolute inset-0 bg-gradient-to-r from-hub-bg via-transparent to-hub-bg" />
         </div>
       )}
 
-      <div className={`px-8 pb-12 ${backdropUrl ? '-mt-16 relative' : 'pt-8'}`}>
+      <div className={`px-8 pb-14 ${backdropUrl ? '-mt-20 relative' : 'pt-8'}`}>
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-hub-sub hover:text-hub-gold text-sm transition-colors duration-150 mb-6 flex items-center gap-1"
+          className="text-hub-faint hover:text-hub-gold text-xs transition-colors duration-150 mb-8 tracking-widest uppercase font-medium"
         >
-          ← Voltar
+          ← voltar
         </button>
 
-        <div className="flex gap-7">
+        <div className="flex gap-8">
+          {/* Poster */}
           {posterUrl && (
-            <img
-              src={posterUrl}
-              alt={title}
-              className="w-32 rounded-xl flex-shrink-0 object-cover shadow-2xl"
-            />
+            <div className="flex-shrink-0">
+              <img
+                src={posterUrl}
+                alt={title}
+                className="w-44 rounded-lg object-cover"
+                style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)' }}
+              />
+            </div>
           )}
 
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display text-3xl font-bold text-hub-text leading-tight mb-3">
+          {/* Info */}
+          <div className="flex-1 min-w-0 pt-2">
+            <h1 className="font-display text-4xl font-bold text-hub-text leading-tight mb-4 max-w-xl">
               {title}
             </h1>
 
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              {year && <span className="text-hub-sub text-sm">{year}</span>}
+            {/* Metadata */}
+            <div className="flex items-center gap-4 mb-5">
+              {year && (
+                <span className="font-mono text-hub-faint text-sm tracking-widest">{year}</span>
+              )}
+              {year && rating && <span className="text-hub-border text-xs">·</span>}
               {rating && (
                 <span className="text-hub-gold text-sm font-semibold">★ {rating}</span>
               )}
             </div>
 
-            <p className="text-hub-sub text-sm leading-relaxed line-clamp-4 mb-6 max-w-xl">
+            <div className="border-t border-hub-border/40 mb-5" />
+
+            <p className="text-hub-sub text-sm leading-[1.75] line-clamp-4 mb-7 max-w-lg">
               {item.overview || 'Sem descrição disponível.'}
             </p>
 
+            {/* Streaming buttons */}
             {loading ? (
-              <div className="h-10 w-44 bg-hub-card animate-pulse rounded-lg" />
+              <div className="h-10 w-48 bg-hub-card animate-pulse" />
             ) : matched.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {matched.map(({ providerId }) => {
@@ -115,7 +129,7 @@ export default function PlayerPage() {
                         const url = direct || watchData?.link || provider.searchUrl(title, mediaType)
                         window.open(url, '_blank', 'noopener,noreferrer')
                       }}
-                      className="inline-flex items-center gap-2 bg-hub-gold text-black font-semibold px-6 py-2.5 rounded-lg text-sm hover:brightness-110 transition-all duration-150 w-fit"
+                      className="inline-flex items-center gap-2 bg-hub-gold text-black font-semibold px-7 py-2.5 text-sm hover:bg-hub-gold-bright transition-colors duration-150 w-fit"
                     >
                       ▶ Assistir no {provider.name}
                     </button>
@@ -130,7 +144,7 @@ export default function PlayerPage() {
                     href={watchLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block text-hub-gold hover:underline text-sm transition-colors"
+                    className="inline-block text-hub-gold hover:text-hub-gold-bright text-sm transition-colors"
                   >
                     Ver onde assistir →
                   </a>

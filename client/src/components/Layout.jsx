@@ -11,16 +11,21 @@ export default function Layout() {
   }
 
   const navClass = ({ isActive }) =>
-    `w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors duration-150 ${
+    `w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all duration-150 ${
       isActive
-        ? 'bg-hub-gold-dim text-hub-gold'
-        : 'text-hub-faint hover:text-hub-sub'
+        ? 'bg-hub-gold-dim text-hub-gold shadow-[inset_2px_0_0_#c8a96e]'
+        : 'text-hub-faint hover:text-hub-sub hover:bg-white/[0.03]'
     }`
 
   return (
     <div className="flex h-screen bg-hub-bg text-hub-text overflow-hidden">
       <aside className="w-[60px] bg-hub-surface border-r border-hub-border flex flex-col items-center py-5 gap-1 flex-shrink-0">
-        <span className="font-display text-xl text-hub-gold mb-7 select-none">◈</span>
+        <span
+          className="font-display text-xl text-hub-gold mb-7 select-none"
+          style={{ textShadow: '0 0 20px rgba(200,169,110,0.4)' }}
+        >
+          ◈
+        </span>
 
         <NavLink to="/dashboard" className={navClass} title="Catálogo">⊟</NavLink>
         <NavLink to="/settings"  className={navClass} title="Serviços">⚙</NavLink>
@@ -32,7 +37,7 @@ export default function Layout() {
 
         <button
           onClick={handleLogout}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg text-hub-faint hover:text-red-500 transition-colors duration-150"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg text-hub-faint hover:text-red-500 hover:bg-red-500/[0.06] transition-all duration-150"
           title="Sair"
         >
           ⏻
