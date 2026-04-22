@@ -130,6 +130,16 @@ export default function PlayerPage() {
     ? episodes.filter((ep) => watchedSet.has(epKey(selectedSeason, ep.episode_number))).length
     : 0
 
+  const openEpisode = useCallback(() => {
+    const direct = matched
+      .map(({ providerId }) => providerByIdMap[providerId])
+      .filter(Boolean)
+      .map((p) => watchData?.directLinks?.[p.name])
+      .find(Boolean)
+    const url = direct || watchLink
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  }, [matched, providerByIdMap, watchData, watchLink])
+
   return (
     <div className="min-h-full bg-hub-bg">
       {/* Backdrop */}
@@ -290,14 +300,16 @@ export default function PlayerPage() {
                   <div className="divide-y divide-hub-border/30">
                     {episodes.map((ep) => {
                       const isWatched = watchedSet.has(epKey(selectedSeason, ep.episode_number))
+                      const canPlay   = !!(matched.length > 0 || watchLink)
                       return (
                         <div
                           key={ep.episode_number}
-                          className={`py-4 flex items-start gap-5 group transition-opacity duration-150 ${isWatched ? 'opacity-50' : ''}`}
+                          onClick={canPlay ? openEpisode : undefined}
+                          className={`py-4 flex items-start gap-5 group transition-opacity duration-150 ${isWatched ? 'opacity-50' : ''} ${canPlay ? 'cursor-pointer hover:bg-hub-gold-dim -mx-2 px-2' : ''}`}
                         >
                           {/* Watched toggle */}
                           <button
-                            onClick={() => toggleWatched(selectedSeason, ep.episode_number)}
+                            onClick={(e) => { e.stopPropagation(); toggleWatched(selectedSeason, ep.episode_number) }}
                             title={isWatched ? 'Marcar como não assistido' : 'Marcar como assistido'}
                             className="flex-shrink-0 mt-0.5 w-4 h-4 border transition-all duration-150 flex items-center justify-center"
                             style={{
@@ -312,8 +324,16 @@ export default function PlayerPage() {
                             )}
                           </button>
 
-                          <span className="font-mono text-hub-faint text-sm w-7 flex-shrink-0 pt-0.5 group-hover:text-hub-gold transition-colors duration-150">
-                            {String(ep.episode_number).padStart(2, '0')}
+                          {/* Número / play icon */}
+                          <span className="font-mono text-hub-faint text-sm w-7 flex-shrink-0 pt-0.5 group-hover:text-hub-gold transition-colors duration-150 relative">
+                            <span className="group-hover:opacity-0 transition-opacity duration-150">
+                              {String(ep.episode_number).padStart(2, '0')}
+                            </span>
+                            {canPlay && (
+                              <span className="absolute inset-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-hub-gold">
+                                ▶
+                              </span>
+                            )}
                           </span>
 
                           <div className="flex-1 min-w-0">
